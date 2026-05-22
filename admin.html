@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ocean Dev — Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #03080f;
+      --surface: #060f1a;
+      --surface2: #0a1825;
+      --surface3: #0d2035;
+      --cyan: #00d4ff;
+      --cyan-dim: #00aacc;
+      --cyan-glow: rgba(0,212,255,0.15);
+      --blue: #0066ff;
+      --red: #ff4060;
+      --red-glow: rgba(255,64,96,0.15);
+      --green: #00ff88;
+      --green-glow: rgba(0,255,136,0.12);
+      --yellow: #ffc800;
+      --text: #e0f0ff;
+      --text-dim: #6a90b0;
+      --border: rgba(0,212,255,0.12);
+      --border-bright: rgba(0,212,255,0.35);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    #login-screen canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 20px;
+    }
+
+    .login-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .login-title span { color: var(--cyan); }
+
+    .login-sub {
+      color: var(--text-dim);
+      font-size: 0.75rem;
+      margin-bottom: 32px;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-input:focus { border-color: var(--cyan); }
+    .form-input::placeholder { color: var(--text-dim); }
+
+    .login-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 0 30px rgba(0,212,255,0.2);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(0,212,255,0.4);
+    }
+
+    .login-error {
+      margin-top: 14px;
+      color: var(--red);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      min-height: 20px;
+    }
+
+    /* ── ADMIN LAYOUT ── */
+    #admin-screen { display: none; min-height: 100vh; }
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 64px 1fr;
+      min-height: 100vh;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      grid-column: 1 / -1;
+      background: rgba(3,8,15,0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .topbar-logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .topbar-logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .topbar-logo-text span { color: var(--cyan); }
+
+    .topbar-badge {
+      background: rgba(0,212,255,0.1);
+      border: 1px solid var(--border-bright);
+      color: var(--cyan);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 4px;
+      margin-left: 12px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-user {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .topbar-user span { color: var(--cyan); }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid rgba(255,64,96,0.4);
+      color: var(--red);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { background: var(--red-glow); }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-section {
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 16px 12px 8px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-link:hover {
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .sidebar-link.active {
+      color: var(--cyan);
+      background: var(--cyan-glow);
+      border-color: var(--border-bright);
+    }
+
+    .sidebar-link .icon { font-size: 15px; width: 20px; text-align: center; }
+
+    .sidebar-count {
+      margin-left: auto;
+      background: var(--surface3);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.62rem;
+      color: var(--cyan);
+    }
+
+    /* MAIN */
+    .main {
+      background: var(--bg);
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    /* PAGE HEADER */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .page-sub {
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      margin-top: 4px;
+    }
+
+    /* STAT CARDS */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--border-bright); }
+
+    .stat-card-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--cyan);
+      letter-spacing: -0.04em;
+    }
+
+    .stat-card-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* ACTION BTN */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      color: #fff;
+      border: none;
+      padding: 11px 22px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 20px rgba(0,212,255,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 40px rgba(0,212,255,0.4);
+    }
+
+    .btn-danger {
+      background: transparent;
+      border: 1px solid rgba(255,64,96,0.4);
+      color: var(--red);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-danger:hover { background: var(--red-glow); border-color: var(--red); }
+
+    .btn-edit {
+      background: transparent;
+      border: 1px solid var(--border-bright);
+      color: var(--cyan);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-edit:hover { background: var(--cyan-glow); }
+
+    /* TABLE */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-toolbar {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 14px;
+      border-radius: 7px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 200px;
+    }
+
+    .search-input:focus { border-color: var(--cyan); }
+    .search-input::placeholder { color: var(--text-dim); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+      font-weight: 400;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0,212,255,0.03); }
+
+    td {
+      padding: 13px 16px;
+      font-size: 0.76rem;
+      vertical-align: middle;
+    }
+
+    .td-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .td-game { color: var(--text-dim); font-size: 0.7rem; }
+
+    .td-code {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #4dd9f0;
+      font-size: 0.7rem;
+    }
+
+    .td-actions {
+      display: flex;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .badge {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .badge-hot { background: rgba(255,80,80,0.15); color: #ff6060; border: 1px solid rgba(255,80,80,0.3); }
+    .badge-new { background: rgba(0,212,255,0.12); color: var(--cyan); border: 1px solid var(--border-bright); }
+    .badge-free { background: rgba(0,255,120,0.1); color: #00ff88; border: 1px solid rgba(0,255,120,0.25); }
+    .badge-premium { background: rgba(255,200,0,0.1); color: #ffc800; border: 1px solid rgba(255,200,0,0.25); }
+    .badge-active { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.25); }
+    .badge-inactive { background: rgba(255,64,96,0.1); color: var(--red); border: 1px solid rgba(255,64,96,0.25); }
+
+    .empty-state {
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 36px;
+      width: 100%;
+      max-width: 560px;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .modal-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color 0.2s;
+      line-height: 1.6;
+    }
+
+    .form-textarea:focus { border-color: var(--cyan); }
+
+    .form-select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+
+    .form-select:focus { border-color: var(--cyan); }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.76rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-ghost:hover { border-color: var(--border-bright); color: var(--text); }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border-bright);
+      color: var(--cyan);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      letter-spacing: 0.05em;
+      z-index: 9999;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { border-color: rgba(255,64,96,0.5); color: var(--red); }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* LOADER CONFIG */
+    .loader-config {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .loader-config h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--cyan);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .admin-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 64px auto 1fr;
+      }
+      .sidebar { display: none; }
+      .main { padding: 20px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <canvas id="login-canvas"></canvas>
+  <div class="login-card">
+    <div class="login-logo">🌊</div>
+    <div class="login-title">Ocean <span>Dev</span></div>
+    <div class="login-sub">// ADMIN PANEL ACCESS</div>
+    <div class="form-group">
+      <label class="form-label">E-Mail</label>
+      <input type="email" class="form-input" id="login-email" placeholder="admin@ocean.dev" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Passwort</label>
+      <input type="password" class="form-input" id="login-password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">Einloggen</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="admin-screen">
+  <div class="admin-layout">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <a href="/" class="topbar-logo">
+        <div class="topbar-logo-icon">🌊</div>
+        <div class="topbar-logo-text">Ocean <span>Dev</span></div>
+        <span class="topbar-badge">Admin</span>
+      </a>
+      <div class="topbar-right">
+        <span class="topbar-user">Eingeloggt als <span id="admin-email-display"></span></span>
+        <button class="logout-btn" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">// Navigation</div>
+      <button class="sidebar-link active" onclick="showPage('dashboard', this)">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="sidebar-link" onclick="showPage('scripts', this)">
+        <span class="icon">📜</span> Scripts
+        <span class="sidebar-count" id="scripts-count">0</span>
+      </button>
+      <button class="sidebar-link" onclick="showPage('loader', this)">
+        <span class="icon">⚙️</span> Loader Config
+      </button>
+      <div class="sidebar-section">// Actions</div>
+      <button class="sidebar-link" onclick="openModal()">
+        <span class="icon">➕</span> Neues Script
+      </button>
+      <a href="/" style="text-decoration:none;">
+        <button class="sidebar-link" style="width:100%">
+          <span class="icon">🌐</span> Website ansehen
+        </button>
+      </a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-sub">// Willkommen im Ocean Dev Admin Panel</div>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-card-num" id="d-total">—</div>
+            <div class="stat-card-label">Scripts Total</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-num" id="d-active">—</div>
+            <div class="stat-card-label">Aktiv</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-num" id="d-hot">—</div>
+            <div class="stat-card-label">🔥 Hot</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-num" id="d-free">—</div>
+            <div class="stat-card-label">Free Scripts</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <span style="font-size:0.72rem;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;">// Zuletzt hinzugefügt</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Titel</th>
+                <th>Game</th>
+                <th>Badge</th>
+                <th>Status</th>
+                <th>Erstellt</th>
+              </tr>
+            </thead>
+            <tbody id="recent-tbody">
+              <tr><td colspan="5" class="empty-state">Lädt...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SCRIPTS -->
+      <div class="page" id="page-scripts">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Scripts verwalten</div>
+            <div class="page-sub">// Alle Scripts in der Datenbank</div>
+          </div>
+          <button class="btn-primary" onclick="openModal()">➕ Neues Script</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input type="text" class="search-input" id="search-input"
+              placeholder="Scripts durchsuchen..." oninput="filterTable(this.value)" />
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Titel</th>
+                <th>Game</th>
+                <th>Script Code</th>
+                <th>Badge</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="scripts-tbody">
+              <tr><td colspan="6" class="empty-state">Lädt...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- LOADER -->
+      <div class="page" id="page-loader">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Loader Config</div>
+            <div class="page-sub">// Universal Loader Script konfigurieren</div>
+          </div>
+        </div>
+        <div class="loader-config">
+          <h3>// Aktueller Loader URL</h3>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Loader Script URL (GitHub Raw / CDN)</label>
+            <input type="text" class="form-input" id="loader-url-input"
+              value="https://raw.githubusercontent.com/ocean-dev/loader/main/loader.lua"
+              placeholder="https://raw.githubusercontent.com/..." />
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn-primary" onclick="saveLoaderUrl()">💾 URL Speichern</button>
+          </div>
+        </div>
+        <div class="loader-config">
+          <h3>// Generierter Loader Code</h3>
+          <div style="background:#020609;border:1px solid var(--border-bright);border-radius:8px;padding:18px;font-size:0.78rem;color:#4dd9f0;line-height:1.8;cursor:pointer" id="loader-preview" onclick="copyLoaderCode()">
+            Klicke auf URL Speichern um den Code zu aktualisieren.
+          </div>
+          <button class="btn-primary" onclick="copyLoaderCode()" style="margin-top:14px">📋 Code kopieren</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- SCRIPT MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title-text">Neues Script</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Titel *</label>
+      <input type="text" class="form-input" id="f-title" placeholder="z.B. Blox Fruits Auto Farm" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Game *</label>
+        <input type="text" class="form-input" id="f-game" placeholder="z.B. Blox Fruits" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Badge</label>
+        <select class="form-select" id="f-badge">
+          <option value="free">Free</option>
+          <option value="new">New</option>
+          <option value="hot">Hot</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Beschreibung</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="Kurze Beschreibung des Scripts..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Script Code *</label>
+      <textarea class="form-textarea" id="f-code" style="min-height:120px;color:#4dd9f0"
+        placeholder='loadstring(game:HttpGet("..."))() -- oder Lua Code'></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="f-status">
+          <option value="active">Aktiv</option>
+          <option value="inactive">Inaktiv</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button class="btn-primary" id="modal-save-btn" onclick="saveScript()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── CONFIG ────────────────────────────────────────────────────────────────
+  const SUPABASE_URL = 'https://hqlbzanbrbcadmcvvgdy.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxbGJ6YW5icmJjYWRtY3Z2Z2R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMDA4NTUsImV4cCI6MjA2MTc3Njg1NX0.Iu6YiCpgA5SkFXDmT0HaJBz0Z5AXBlsQGIBYlFvLmN8';
+
+  let SESSION_TOKEN = null;
+  let allScripts = [];
+  let editingId = null;
+
+  // ─── SUPABASE HELPERS ──────────────────────────────────────────────────────
+  async function sbFetch(path, opts = {}) {
+    const headers = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SESSION_TOKEN || SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      ...opts.headers
+    };
+    const res = await fetch(`${SUPABASE_URL}${path}`, { ...opts, headers });
+    if (!res.ok && res.status !== 204) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || err.error_description || `HTTP ${res.status}`);
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  // ─── LOGIN CANVAS (mini ocean) ─────────────────────────────────────────────
+  (function() {
+    const canvas = document.getElementById('login-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, pts = [];
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    function init() {
+      pts = Array.from({length: 30}, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random()-.5)*.25, vy: (Math.random()-.5)*.25,
+        r: Math.random()*1.2+.3, a: Math.random()*.4+.08
+      }));
+    }
+    function draw(t) {
+      ctx.clearRect(0,0,W,H);
+      const g = ctx.createRadialGradient(W/2,H*.4,0,W/2,H/2,Math.max(W,H));
+      g.addColorStop(0,'rgba(0,40,80,0.18)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        const y0=H*(0.25+i*.2), amp=16+i*6, fr=0.005-i*.0005, sp=t*.0003*(1-i*.2);
+        ctx.moveTo(0,y0);
+        for(let x=0;x<=W;x+=5){
+          ctx.lineTo(x, y0+Math.sin(x*fr+sp)*amp+Math.sin(x*fr*1.8+sp*1.4)*(amp*.35));
+        }
+        ctx.strokeStyle=`rgba(0,212,255,${0.04-i*.01})`; ctx.lineWidth=1; ctx.stroke();
+      }
+      pts.forEach(p=>{
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+        if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,212,255,${p.a})`; ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', ()=>{resize();init();});
+    resize(); init(); requestAnimationFrame(draw);
+  })();
+
+  // ─── AUTH ──────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Bitte alle Felder ausfüllen.'; return; }
+    try {
+      const data = await sbFetch('/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+      SESSION_TOKEN = data.access_token;
+      document.getElementById('admin-email-display').textContent = email;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('admin-screen').style.display = 'block';
+      loadAllScripts();
+    } catch(e) {
+      errEl.textContent = 'Login fehlgeschlagen: ' + e.message;
+    }
+  }
+
+  function doLogout() {
+    SESSION_TOKEN = null;
+    document.getElementById('admin-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').textContent = '';
+  }
+
+  // ─── NAVIGATION ────────────────────────────────────────────────────────────
+  function showPage(name, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-link').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'loader') updateLoaderPreview();
+  }
+
+  // ─── LOAD SCRIPTS ──────────────────────────────────────────────────────────
+  async function loadAllScripts() {
+    try {
+      allScripts = await sbFetch('/rest/v1/ocean_scripts?order=created_at.desc');
+      renderDashboard();
+      renderScriptsTable();
+      document.getElementById('scripts-count').textContent = allScripts.length;
+    } catch(e) {
+      showToast('Fehler beim Laden: ' + e.message, true);
+    }
+  }
+
+  function renderDashboard() {
+    const total = allScripts.length;
+    const active = allScripts.filter(s => s.status === 'active').length;
+    const hot = allScripts.filter(s => s.badge?.toLowerCase() === 'hot').length;
+    const free = allScripts.filter(s => s.badge?.toLowerCase() === 'free').length;
+    document.getElementById('d-total').textContent = total;
+    document.getElementById('d-active').textContent = active;
+    document.getElementById('d-hot').textContent = hot;
+    document.getElementById('d-free').textContent = free;
+
+    const recent = allScripts.slice(0, 5);
+    const tbody = document.getElementById('recent-tbody');
+    if (!recent.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Keine Scripts vorhanden.</td></tr>'; return; }
+    tbody.innerHTML = recent.map(s => `
+      <tr>
+        <td class="td-title">${esc(s.title)}</td>
+        <td class="td-game">${esc(s.game)}</td>
+        <td><span class="badge badge-${(s.badge||'free').toLowerCase()}">${(s.badge||'free').toUpperCase()}</span></td>
+        <td><span class="badge badge-${s.status==='active'?'active':'inactive'}">${s.status||'—'}</span></td>
+        <td style="color:var(--text-dim);font-size:0.7rem">${fmtDate(s.created_at)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function renderScriptsTable(filter = '') {
+    const tbody = document.getElementById('scripts-tbody');
+    const filtered = filter
+      ? allScripts.filter(s =>
+          (s.title||'').toLowerCase().includes(filter) ||
+          (s.game||'').toLowerCase().includes(filter))
+      : allScripts;
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">${filter ? 'Keine Ergebnisse.' : 'Noch keine Scripts. Klicke auf "Neues Script".'}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td class="td-title">${esc(s.title)}</td>
+        <td class="td-game">${esc(s.game)}</td>
+        <td class="td-code" title="${esc(s.script_code)}">${esc(s.script_code)}</td>
+        <td><span class="badge badge-${(s.badge||'free').toLowerCase()}">${(s.badge||'free').toUpperCase()}</span></td>
+        <td><span class="badge badge-${s.status==='active'?'active':'inactive'}">${s.status||'—'}</span></td>
+        <td class="td-actions">
+          <button class="btn-edit" onclick="openModal('${s.id}')">✏️ Edit</button>
+          <button class="btn-danger" onclick="deleteScript('${s.id}')">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function filterTable(val) {
+    renderScriptsTable(val.trim().toLowerCase());
+  }
+
+  // ─── MODAL ────────────────────────────────────────────────────────────────
+  function openModal(id = null) {
+    editingId = id;
+    const overlay = document.getElementById('modal-overlay');
+    const s = id ? allScripts.find(x => x.id == id) : null;
+    document.getElementById('modal-title-text').textContent = id ? 'Script bearbeiten' : 'Neues Script';
+    document.getElementById('f-title').value = s?.title || '';
+    document.getElementById('f-game').value = s?.game || '';
+    document.getElementById('f-badge').value = s?.badge?.toLowerCase() || 'free';
+    document.getElementById('f-desc').value = s?.description || '';
+    document.getElementById('f-code').value = s?.script_code || '';
+    document.getElementById('f-status').value = s?.status || 'active';
+    overlay.classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    editingId = null;
+  }
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  async function saveScript() {
+    const title = document.getElementById('f-title').value.trim();
+    const game = document.getElementById('f-game').value.trim();
+    const code = document.getElementById('f-code').value.trim();
+    if (!title || !game || !code) { showToast('Titel, Game und Script Code sind Pflicht!', true); return; }
+
+    const payload = {
+      title, game,
+      badge: document.getElementById('f-badge').value,
+      description: document.getElementById('f-desc').value.trim(),
+      script_code: code,
+      status: document.getElementById('f-status').value
+    };
+
+    const btn = document.getElementById('modal-save-btn');
+    btn.innerHTML = '⏳ Speichern...';
+    btn.disabled = true;
+
+    try {
+      if (editingId) {
+        await sbFetch(`/rest/v1/ocean_scripts?id=eq.${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload)
+        });
+        showToast('✅ Script aktualisiert!');
+      } else {
+        await sbFetch('/rest/v1/ocean_scripts', {
+          method: 'POST',
+          headers: { 'Prefer': 'return=minimal' },
+          body: JSON.stringify(payload)
+        });
+        showToast('✅ Script hinzugefügt!');
+      }
+      closeModal();
+      await loadAllScripts();
+    } catch(e) {
+      showToast('Fehler: ' + e.message, true);
+    } finally {
+      btn.innerHTML = '💾 Speichern';
+      btn.disabled = false;
+    }
+  }
+
+  async function deleteScript(id) {
+    if (!confirm('Script wirklich löschen?')) return;
+    try {
+      await sbFetch(`/rest/v1/ocean_scripts?id=eq.${id}`, { method: 'DELETE' });
+      showToast('🗑️ Script gelöscht.');
+      await loadAllScripts();
+    } catch(e) {
+      showToast('Fehler: ' + e.message, true);
+    }
+  }
+
+  // ─── LOADER ───────────────────────────────────────────────────────────────
+  function updateLoaderPreview() {
+    const url = document.getElementById('loader-url-input').value.trim();
+    const code = `loadstring(game:HttpGet("${url}"))()`;
+    document.getElementById('loader-preview').textContent = code;
+  }
+
+  function saveLoaderUrl() {
+    updateLoaderPreview();
+    showToast('✅ Loader URL gespeichert!');
+  }
+
+  function copyLoaderCode() {
+    const code = document.getElementById('loader-preview').textContent;
+    navigator.clipboard.writeText(code).then(() => showToast('📋 Loader Code kopiert!'));
+  }
+
+  // ─── UTILS ────────────────────────────────────────────────────────────────
+  function showToast(msg, isErr = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isErr ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+</script>
+</body>
+</html>
